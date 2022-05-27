@@ -2,13 +2,17 @@ import csv
 import os
 import ssl
 from pathlib import Path
+
+import pandas
 import requests
 from requests.exceptions import HTTPError
 import pandas as pd
 import xmltodict
 import json
 import time
+from json import dumps
 from datetime import datetime
+from kafka import KafkaProducer
 
 SSL_CONTEXT = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
 BROKER_HOST = os.environ.get("BROKER_HOST", "localhost")
@@ -39,29 +43,26 @@ def make_df(js: dict) -> pd.DataFrame:
     return df
 
 
-# async def send_to_kafka(date_saved):
-#    """
-#    Fonction qui va envoyer vers un kafka le résultat du prétraitement pour pouvoir
-#    être consommé par les applications
-#    """
-#    output_dir = Path('../../data/processed/' + str(date_saved.month) + '/' + str(date_saved.day))
-#    # output_file = 'data-' + str(date_saved.hour) + '-' + str(date_saved.minute) + '-' + str(date_saved.second) + '.csv'
-#    output_file = 'data-reel.csv'
+def send_to_kafka(data: pandas.DataFrame):
+    """
+    Fonction qui va envoyer vers un kafka le résultat du prétraitement pour pouvoir
+    être consommé par les applications
+    """
+    # output_dir = Path('../../data/processed/' + str(date_saved.month) + '/' + str(date_saved.day))
+    # # output_file = 'data-' + str(date_saved.hour) + '-' + str(date_saved.minute) + '-' + str(date_saved.second) + '.csv'
+    # output_file = 'data-reel.csv'
 
-#    brokers = 'localhost:9092'
-#    topic = 'rer-b-injector'
-#    producer = KafkaProducer(bootstrap_servers=[brokers])
+    brokers = 'localhost:9092'
+    topic = 'rer-b-injector'
+    producer = KafkaProducer(bootstrap_servers=[brokers], value_serializer=lambda x: dumps(x).encode('utf-8'))
 
-#    with open(output_dir + '/' + output_file) as file:
-#        reader = csv.reader(file, delimiter=";")
-#        for row in reader:
-#            await producer.send(topic, row)
+    producer.send(topic, value=data.to_json())
 
 
 def main():
     payload = {}
     headers = {
-        'Authorization': ''
+        'Authorization': 'Basic dG5odG4xMjY0Olc1UXpiM2Q4'
     }
 
     df_array = []
@@ -127,7 +128,7 @@ def main():
     output_file = 'data-reel.csv'
     output_dir.mkdir(parents=True, exist_ok=True)
     df.to_csv(output_dir / output_file, index=False, mode='a', header=False)
-    # send_to_kafka(datetime_obj)
+    send_to_kafka(df)
 
 
 if __name__ == "__main__":
