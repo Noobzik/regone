@@ -1,4 +1,4 @@
-Retaro-gone
+Regone
 ==============================
 
 Un projet qui calcule les ecarts du temps de parcours d'une gare A vers une gare B de la ligne du RER B Partie SNCF (Gare du Nord - Mitry Claye - Aeroport Charles-de-Gaulles)
