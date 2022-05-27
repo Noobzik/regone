@@ -9,6 +9,8 @@ Project Organization
     ├── LICENSE
     ├── Makefile           <- Makefile with commands like `make data` or `make train`
     ├── README.md          <- The top-level README for developers using this project.
+    ├── airflow_dags       <- Contains dags for airflow
+    ├── aws_lambda         <- Contains Lambda functions for AWS Lambda
     ├── data
     │   ├── external       <- Data from third party sources.
     │   ├── interim        <- Intermediate data that has been transformed.
