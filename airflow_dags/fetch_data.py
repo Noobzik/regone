@@ -120,7 +120,7 @@ def fetch_data_rer_b():
             else:
                 response.append(feed)
         for u in response:
-            """
+            """ x
             Pré-traitement du JSON et stockage du résultat sous la forme d'un dictionnaire dans une liste de
             dataframe
             """

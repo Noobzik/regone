@@ -55,8 +55,9 @@ def send_to_kafka(data: pandas.DataFrame):
     brokers = 'localhost:9092'
     topic = 'rer-b-injector'
     producer = KafkaProducer(bootstrap_servers=[brokers], value_serializer=lambda x: dumps(x).encode('utf-8'))
-
-    producer.send(topic, value=data.to_json())
+    data_json = json.loads(data.to_json(orient="records"))
+    producer.send(topic, value=data_json)
+    producer.flush()
 
 
 def main():
@@ -128,6 +129,7 @@ def main():
     output_file = 'data-reel.csv'
     output_dir.mkdir(parents=True, exist_ok=True)
     df.to_csv(output_dir / output_file, index=False, mode='a', header=False)
+    df.to_json()
     send_to_kafka(df)
 
 
