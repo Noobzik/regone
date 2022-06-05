@@ -19,7 +19,7 @@ BROKER_HOST = os.environ.get("BROKER_HOST", "localhost")
 
 
 def make_df(js: dict) -> pd.DataFrame:
-    columns = ['timestamp', 'gare', 'num', 'miss', 'term', 'date.mode', 'date.text', 'direction', 'etat']
+    columns = ['processing_date', 'gare', 'num', 'miss', 'term', 'date.mode', 'date.text', 'direction', 'etat']
     columns_renamed = {"miss": "trip_headsign", "term": "destination", "date.text": "heure_arrive"}
     df = pd.DataFrame.from_dict(js, orient='index')
     try:
@@ -63,7 +63,7 @@ def send_to_kafka(data: pandas.DataFrame):
 def main():
     payload = {}
     headers = {
-        'Authorization': 'Basic dG5odG4xMjY0Olc1UXpiM2Q4'
+        'Authorization': 'Basic '
     }
 
     df_array = []
@@ -122,7 +122,7 @@ def main():
     unix_timestamp = datetime.now().timestamp()
     # Getting date and time in local time
     datetime_obj = datetime.fromtimestamp(int(unix_timestamp))
-    df = df.assign(timestamp=datetime_obj)
+    df = df.assign(processing_date=datetime_obj)
     df.to_csv()
     # Sauvegarder le fichier CSV final
     output_dir = Path('../../data/processed/' + str(datetime_obj.month) + '/' + str(datetime_obj.day))

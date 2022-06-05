@@ -16,7 +16,6 @@ from json import dumps
 from airflow import AirflowException
 from kafka import KafkaProducer
 
-
 DAG_NAME = os.path.basename(__file__).replace(".py", "")  # Le nom du DAG est le nom du fichier
 TRANSILIEN_TOKEN = Variable.get("TRANSILIEN_TOKEN")
 
@@ -34,6 +33,7 @@ def fetch_data_rer_b():
     """
     Ce DAG est permet de récupérer les prochains départs de l'ensemble de la partie SNCF du RER B
     """
+
     # Charge les données depuis S3
     @task
     def send_to_kafka(data: pd.DataFrame):
@@ -47,7 +47,7 @@ def fetch_data_rer_b():
         producer = KafkaProducer(bootstrap_servers=[brokers], value_serializer=lambda x: dumps(x).encode('utf-8'))
 
         producer.send(topic, value=data.to_json())
-    
+
     @task()
     def fetch_real_time_data():
         """
@@ -148,12 +148,11 @@ def fetch_data_rer_b():
         output_dir.mkdir(parents=True, exist_ok=True)
         df.to_csv(output_dir / output_file, index=False, mode='a', header=False)
 
-
     fetch_real_time_data()
 
 
 dag_projet_instances = fetch_data_rer_b()  # Instanciation du DAG
 
 # Pour run:
-#airflow dags backfill --start-date 2019-01-02 --end-date 2019-01-03 --reset-dagruns daily_ml
+# airflow dags backfill --start-date 2019-01-02 --end-date 2019-01-03 --reset-dagruns daily_ml
 # airflow tasks test aggregate_data_2 2019-01-02
