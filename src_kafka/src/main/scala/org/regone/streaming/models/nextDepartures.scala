@@ -4,11 +4,11 @@ package org.regone.streaming.models
 import play.api.libs.json.{Json, OFormat}
 
 case class nextDepartures(
-                         mission: String,
-                         station: String,
-                         timeArrival: String,
-                         destination: String,
-                         direction: String
+                         miss: String,
+                         num: String,
+                         term: String,
+                         depart: String,
+                         type_horaire: String
                          )
 
 object nextDepartures {
