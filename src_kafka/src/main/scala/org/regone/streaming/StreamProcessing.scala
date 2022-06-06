@@ -12,6 +12,7 @@ import java.io.InputStream
 import java.util.Properties
 
 object StreamProcessing extends PlayJsonSupport {
+
   import org.apache.kafka.streams.scala.ImplicitConversions._
   import org.apache.kafka.streams.scala.serialization.Serdes._
 
@@ -81,22 +82,22 @@ object StreamProcessing extends PlayJsonSupport {
 
 
   // Group By Gare
-  val rer_b_87001479_next_departures : KTable[String, nextDepartures] = rer_b_87001479(Materialized.as("87001479"))
-  val rer_b_87271460_next_departures : KTable[String, nextDepartures] = rer_b_87271460(Materialized.as("87271460"))
-  val rer_b_87271486_next_departures : KTable[String, nextDepartures] = rer_b_87271486(Materialized.as("87271486"))
-  val rer_b_87271452_next_departures : KTable[String, nextDepartures] = rer_b_87271452(Materialized.as("87271452"))
-  val rer_b_87271445_next_departures : KTable[String, nextDepartures] = rer_b_87271445(Materialized.as("87271445"))
-  val rer_b_87271528_next_departures : KTable[String, nextDepartures] = rer_b_87271528(Materialized.as("87271528"))
-  val rer_b_87271510_next_departures : KTable[String, nextDepartures] = rer_b_87271510(Materialized.as("87271510"))
-  val rer_b_87271437_next_departures : KTable[String, nextDepartures] = rer_b_87271437(Materialized.as("87271437"))
-  val rer_b_87271429_next_departures : KTable[String, nextDepartures] = rer_b_87271429(Materialized.as("87271429"))
-  val rer_b_87271411_next_departures : KTable[String, nextDepartures] = rer_b_87271411(Materialized.as("87271411"))
-  val rer_b_87271478_next_departures : KTable[String, nextDepartures] = rer_b_87271478(Materialized.as("87271478"))
-  val rer_b_87271403_next_departures : KTable[String, nextDepartures] = rer_b_87271403(Materialized.as("87271403"))
-  val rer_b_87271395_next_departures : KTable[String, nextDepartures] = rer_b_87271395(Materialized.as("87271395"))
-  val rer_b_87271304_next_departures : KTable[String, nextDepartures] = rer_b_87271304(Materialized.as("87271304"))
-  val rer_b_87164798_next_departures : KTable[String, nextDepartures] = rer_b_87164798(Materialized.as("87164798"))
-  val rer_b_87271007_next_departures : KTable[String, nextDepartures] = rer_b_87271007(Materialized.as("87271007"))
+  val rer_b_87001479_next_departures : KTable[String, nextDepartures] = rer_b_87001479(Materialized.as(rer_b_87001479_StoreName))
+  val rer_b_87271460_next_departures : KTable[String, nextDepartures] = rer_b_87271460(Materialized.as(rer_b_87271460_StoreName))
+  val rer_b_87271486_next_departures : KTable[String, nextDepartures] = rer_b_87271486(Materialized.as(rer_b_87271486_StoreName))
+  val rer_b_87271452_next_departures : KTable[String, nextDepartures] = rer_b_87271452(Materialized.as(rer_b_87271452_StoreName))
+  val rer_b_87271445_next_departures : KTable[String, nextDepartures] = rer_b_87271445(Materialized.as(rer_b_87271445_StoreName))
+  val rer_b_87271528_next_departures : KTable[String, nextDepartures] = rer_b_87271528(Materialized.as(rer_b_87271528_StoreName))
+  val rer_b_87271510_next_departures : KTable[String, nextDepartures] = rer_b_87271510(Materialized.as(rer_b_87271510_StoreName))
+  val rer_b_87271437_next_departures : KTable[String, nextDepartures] = rer_b_87271437(Materialized.as(rer_b_87271437_StoreName))
+  val rer_b_87271429_next_departures : KTable[String, nextDepartures] = rer_b_87271429(Materialized.as(rer_b_87271429_StoreName))
+  val rer_b_87271411_next_departures : KTable[String, nextDepartures] = rer_b_87271411(Materialized.as(rer_b_87271411_StoreName))
+  val rer_b_87271478_next_departures : KTable[String, nextDepartures] = rer_b_87271478(Materialized.as(rer_b_87271478_StoreName))
+  val rer_b_87271403_next_departures : KTable[String, nextDepartures] = rer_b_87271403(Materialized.as(rer_b_87271403_StoreName))
+  val rer_b_87271395_next_departures : KTable[String, nextDepartures] = rer_b_87271395(Materialized.as(rer_b_87271395_StoreName))
+  val rer_b_87271304_next_departures : KTable[String, nextDepartures] = rer_b_87271304(Materialized.as(rer_b_87271304_StoreName))
+  val rer_b_87164798_next_departures : KTable[String, nextDepartures] = rer_b_87164798(Materialized.as(rer_b_87164798_StoreName))
+  val rer_b_87271007_next_departures : KTable[String, nextDepartures] = rer_b_87271007(Materialized.as(rer_b_87271007_StoreName))
 
   // Compute the travel time (Hardest one)
 
