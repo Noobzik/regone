@@ -8,8 +8,15 @@ from urllib.request import urlretrieve
 from airflow.utils.dates import days_ago
 from airflow.decorators import dag, task
 from airflow.models import Variable
+from io import StringIO
+
+import boto3
+
 import zipfile
 import pandas as pd
+
+
+s3 = boto3.resource('s3')
 
 DAG_NAME = os.path.basename(__file__).replace(".py", "")  # Le nom du DAG est le nom du fichier
 TRANSILIEN_TOKEN = Variable.get("TRANSILIEN_TOKEN")
@@ -133,7 +140,23 @@ def fetch_data_rer_b():
             res = dicto["Station_Order"]
             return res
 
+        def upload__df_to_s3(df: pd.DataFrame):
+            bucket = 'rer'  # already created on S3
+            csv_buffer = StringIO()
+            df.to_csv(csv_buffer)
+
+            s3_resource = boto3.resource('s3')
+            s3_resource.Object(bucket, 'df.csv').put(Body=csv_buffer.getvalue())
+
+        def download_gtfs_from_s3(today_date):
+            path_gtfs = "https://eu.ftp.opendatasoft.com/sncf/gtfs/transilien-gtfs.zip"
+
+            path_where_download = "s3://sncf-rer-b/transilien-gtfs-" + today_date + ".zip"
+            urlretrieve(path_gtfs, path_where_download)
+
+
         today_date = time.strftime('%Y-%m-%d', time.localtime())
+
         gtfs_path = "../../data/external/transilien-gtfs-" + today_date + ".zip"  # GTFS Path file
         rer_b_relation = "../../data/processed/relation_ordre_RER_B.csv"  # Relation d'ordre des gares du RER B
         routes_line = "IDFM:C01743"  # RER B au format IDFM
@@ -202,6 +225,7 @@ def fetch_data_rer_b():
                     ignore_index=True)
 
         print("--- %s seconds ---" % (time.time() - start_time))
+        upload_to_s3(cleaned_df)
 
     process_gtfs()
 
