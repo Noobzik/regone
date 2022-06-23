@@ -1,0 +1,7 @@
+boto3
+pathlib
+pandas
+pendulum
+requests
+xmlschema
+kafka-python
