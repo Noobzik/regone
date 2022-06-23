@@ -12,5 +12,6 @@ case class nextDepartures(
                          )
 
 object nextDepartures {
+  def empty :nextDepartures = nextDepartures("", "", "", "", "")
   implicit val format: OFormat[nextDepartures] = Json.format[nextDepartures]
 }

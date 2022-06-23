@@ -3,12 +3,13 @@ package org.regone.streaming
 
 import io.github.azhur.kafkaserdeplayjson.PlayJsonSupport
 import org.apache.kafka.streams.KafkaStreams
-import org.apache.kafka.streams.kstream.Windowed
+import org.apache.kafka.streams.kstream.{Aggregator, SlidingWindows, Windowed}
 import org.apache.kafka.streams.scala._
 import org.apache.kafka.streams.scala.kstream._
 import org.regone.streaming.models.nextDepartures
 
 import java.io.InputStream
+import java.time.Duration
 import java.util.Properties
 
 object StreamProcessing extends PlayJsonSupport {
@@ -82,24 +83,45 @@ object StreamProcessing extends PlayJsonSupport {
 
 
   // Group By Gare
-  val rer_b_87001479_next_departures : KTable[String, nextDepartures] = rer_b_87001479(Materialized.as(rer_b_87001479_StoreName))
-  val rer_b_87271460_next_departures : KTable[String, nextDepartures] = rer_b_87271460(Materialized.as(rer_b_87271460_StoreName))
-  val rer_b_87271486_next_departures : KTable[String, nextDepartures] = rer_b_87271486(Materialized.as(rer_b_87271486_StoreName))
-  val rer_b_87271452_next_departures : KTable[String, nextDepartures] = rer_b_87271452(Materialized.as(rer_b_87271452_StoreName))
-  val rer_b_87271445_next_departures : KTable[String, nextDepartures] = rer_b_87271445(Materialized.as(rer_b_87271445_StoreName))
-  val rer_b_87271528_next_departures : KTable[String, nextDepartures] = rer_b_87271528(Materialized.as(rer_b_87271528_StoreName))
-  val rer_b_87271510_next_departures : KTable[String, nextDepartures] = rer_b_87271510(Materialized.as(rer_b_87271510_StoreName))
-  val rer_b_87271437_next_departures : KTable[String, nextDepartures] = rer_b_87271437(Materialized.as(rer_b_87271437_StoreName))
-  val rer_b_87271429_next_departures : KTable[String, nextDepartures] = rer_b_87271429(Materialized.as(rer_b_87271429_StoreName))
-  val rer_b_87271411_next_departures : KTable[String, nextDepartures] = rer_b_87271411(Materialized.as(rer_b_87271411_StoreName))
-  val rer_b_87271478_next_departures : KTable[String, nextDepartures] = rer_b_87271478(Materialized.as(rer_b_87271478_StoreName))
-  val rer_b_87271403_next_departures : KTable[String, nextDepartures] = rer_b_87271403(Materialized.as(rer_b_87271403_StoreName))
-  val rer_b_87271395_next_departures : KTable[String, nextDepartures] = rer_b_87271395(Materialized.as(rer_b_87271395_StoreName))
-  val rer_b_87271304_next_departures : KTable[String, nextDepartures] = rer_b_87271304(Materialized.as(rer_b_87271304_StoreName))
-  val rer_b_87164798_next_departures : KTable[String, nextDepartures] = rer_b_87164798(Materialized.as(rer_b_87164798_StoreName))
-  val rer_b_87271007_next_departures : KTable[String, nextDepartures] = rer_b_87271007(Materialized.as(rer_b_87271007_StoreName))
+//  val rer_b_87001479_next_departures : KTable[String, nextDepartures] = rer_b_87001479.groupBy((_, word) => word))(Materialized.as(rer_b_87001479_TopicName)
+//  val rer_b_87271460_next_departures : KTable[String, nextDepartures] = rer_b_87271460
+//  (Materialized.as(rer_b_87271460_StoreName))
+//  val rer_b_87271486_next_departures : KTable[String, nextDepartures] = rer_b_87271486
+//  (Materialized.as(rer_b_87271486_StoreName))
+//  val rer_b_87271452_next_departures : KTable[String, nextDepartures] = rer_b_87271452
+//  (Materialized.as(rer_b_87271452_StoreName))
+//  val rer_b_87271445_next_departures : KTable[String, nextDepartures] = rer_b_87271445
+//  (Materialized.as(rer_b_87271445_StoreName))
+//  val rer_b_87271528_next_departures : KTable[String, nextDepartures] = rer_b_87271528
+//  (Materialized.as(rer_b_87271528_StoreName))
+//  val rer_b_87271510_next_departures : KTable[String, nextDepartures] = rer_b_87271510
+//  (Materialized.as(rer_b_87271510_StoreName))
+//  val rer_b_87271437_next_departures : KTable[String, nextDepartures] = rer_b_87271437
+//  (Materialized.as(rer_b_87271437_StoreName))
+//  val rer_b_87271429_next_departures : KTable[String, nextDepartures] = rer_b_87271429
+//  (Materialized.as(rer_b_87271429_StoreName))
+//  val rer_b_87271411_next_departures : KTable[String, nextDepartures] = rer_b_87271411
+//  (Materialized.as(rer_b_87271411_StoreName))
+//  val rer_b_87271478_next_departures : KTable[String, nextDepartures] = rer_b_87271478
+//  (Materialized.as(rer_b_87271478_StoreName))
+//  val rer_b_87271403_next_departures : KTable[String, nextDepartures] = rer_b_87271403
+//  (Materialized.as(rer_b_87271403_StoreName))
+//  val rer_b_87271395_next_departures : KTable[String, nextDepartures] = rer_b_87271395
+//  (Materialized.as(rer_b_87271395_StoreName))
+//  val rer_b_87271304_next_departures : KTable[String, nextDepartures] = rer_b_87271304
+//  (Materialized.as(rer_b_87271304_StoreName))
+//  val rer_b_87164798_next_departures : KTable[String, nextDepartures] = rer_b_87164798
+//  (Materialized.as(rer_b_87164798_StoreName))
+//  val rer_b_87271007_next_departures : KTable[String, nextDepartures] = rer_b_87271007
+//  (Materialized.as(rer_b_87271007_StoreName))
 
   // Compute the travel time (Hardest one)
+  val timeDifference : Duration = Duration.ofMinutes(2)
+  val gracePeriod : Duration = Duration.ofSeconds(15)
+  val rer_b_87001479_next_departures : TimeWindowedKStream[String, nextDepartures] = rer_b_87001479
+    .groupByKey
+    .windowedBy(SlidingWindows.ofTimeDifferenceAndGrace(timeDifference, gracePeriod))
+    .reduce()
 
   /**
    * 1- Get the previous records

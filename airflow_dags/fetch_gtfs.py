@@ -225,7 +225,7 @@ def fetch_data_rer_b():
                     ignore_index=True)
 
         print("--- %s seconds ---" % (time.time() - start_time))
-        upload_to_s3(cleaned_df)
+#        upload_to_s3(cleaned_df)
 
     process_gtfs()
 
