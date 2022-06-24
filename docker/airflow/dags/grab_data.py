@@ -20,6 +20,8 @@ from requests.exceptions import HTTPError
 DAG_NAME = os.path.basename(__file__).replace(".py", "")  # Le nom du DAG est le nom du fichier
 TRANSILIEN_TOKEN = Variable.get("TRANSILIEN_KEY")
 AWS_REGION = Variable.get("AWS_REGION")
+AWS_ACCESS_ID = Variable.get("AWS_ACCESS_ID")
+AWS_SECRET_ACCESS_KEY = Variable.get("AWS_SECRET_ACCESS_KEY")
 BUCKET = "sncf-rer-b"
 BROKER = Variable.get("BROKER")
 
@@ -291,13 +293,15 @@ def fetch_data_rer_b():
 
         def save_df(data: list[list[dict]], gares: list[str], date: pendulum.DateTime):
             """
-            Méthode qui va sauvegarder les données sur un CSV en local
+            Méthode qui va sauvegarder les données sur un CSV en local, en préparation de upload vers S3
             """
             for i in range(len(data)):
-                df = pd.DataFrame.from_dict(data[i])
                 output_dir = Path('data/processed/' + str(date.month) + '/' + str(date.day))
                 output_file = 'data-reel-' + gares[i] + '.csv'
                 path = Path(output_dir / output_file)
+
+                df = pd.DataFrame.from_records(data[i])
+
                 if path.is_file():
                     df.to_csv(path, index=False, mode='a', header=False)
                 else:
@@ -328,9 +332,41 @@ def fetch_data_rer_b():
                     try:
                         s3.upload_file(str(path), 'sncf-rer-b', s3_path + '/' + output_file)
                     except ClientError as e:
-                        logging.error(e)
-                        return False
+                        print(logging.error(e))
+                        exit(-1)
             return True
+
+        def save_df_upload_s3(data: list[list[dict]], gares: list[str], date: pendulum.DateTime):
+            """
+            Méthode qui va sauvegarder les données sur un CSV en local, en préparation de upload vers S3
+            """
+            session = boto3.Session(aws_access_key_id=AWS_ACCESS_ID,
+                                    aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+            s3 = session.client('s3')
+
+            for i in range(len(data)):
+                output_dir = Path('data/processed/'
+                                  + str(date.month)
+                                  + '/'
+                                  + str(date.day))
+                output_file = 'data-reel-' \
+                              + gares[i] \
+                              + '.csv'
+                path = Path(output_dir / output_file)
+                s3_path = 'data/processed/' \
+                          + str(date.month) + '/' \
+                          + str(date.day)
+                df = pd.DataFrame.from_records(jsons[i])
+                if path.is_file():
+                    df.to_csv(path, index=False, mode='a', header=False)
+                else:
+                    output_dir.mkdir(parents=True, exist_ok=True)
+                    df.to_csv(path, index=False, mode='a', header=True)
+                try:
+                    s3.upload_file(str(path), 'sncf-rer-b', s3_path + '/' + output_file)
+                except ClientError as e:
+                    print(logging.error(e))
+                    exit(-1)
 
         gares = [
             "87001479",  # Charles de Gaulles 2
@@ -360,8 +396,9 @@ def fetch_data_rer_b():
         stations = df_to_station(xml, datetime_obj)
         jsons = stations_to_json(stations)
         send_to_kafka(jsons, gares)
-        # save_df(jsons, gares, datetime_obj)
-        # save_to_s3(gares, datetime_obj)
+#        save_df(jsons, gares, datetime_obj)
+#        save_to_s3(gares, datetime_obj)
+        save_df_upload_s3(jsons, gares, datetime_obj)
 
         # Sauvegarder le fichier CSV final
 
