@@ -1,62 +1,52 @@
 import os
+import warnings
 
-import pathlib
-
-from datetime import timedelta, time
+import boto3
+import pendulum
+import zipfile
+import pandas as pd
+from pathlib import Path
 from urllib.request import urlretrieve
-
-from airflow.utils.dates import days_ago
 from airflow.decorators import dag, task
 from airflow.models import Variable
 from io import StringIO
 
-import boto3
-
-import zipfile
-import pandas as pd
-
-
-s3 = boto3.resource('s3')
 
 DAG_NAME = os.path.basename(__file__).replace(".py", "")  # Le nom du DAG est le nom du fichier
-TRANSILIEN_TOKEN = Variable.get("TRANSILIEN_TOKEN")
+TRANSILIEN_TOKEN = Variable.get("TRANSILIEN_KEY")
 
 default_args = {
     'owner': 'noobzik',
-    'retries': 1,
-    'retry_delay': timedelta(minutes=30)
+    'retries': 0,
+    'retry_delay': pendulum.duration(minutes=30)
 }
-current_dir = pathlib.Path.cwd()
-print(current_dir)
 
 
-@dag(DAG_NAME, default_args=default_args, schedule_interval="* 0 1 * * *", start_date=days_ago(1))
-def fetch_data_rer_b():
+@dag(DAG_NAME, default_args=default_args, schedule_interval="0 3 * * *",
+     start_date=pendulum.today('Europe/Paris').add(days=-1), catchup=False)
+def fetch_gtfs():
     """
     Ce DAG est permet de récupérer les prochains départs de l'ensemble de la partie SNCF du RER B
     """
 
     # Charge les données depuis S3
-    @task
-    def grab_gtfs():
+    def grab_gtfs(path_where_download):
         """
         Fonction qui va envoyer vers un kafka le résultat du prétraitement pour pouvoir
         être consommé par les applications
         """
 
         path_gtfs = "https://eu.ftp.opendatasoft.com/sncf/gtfs/transilien-gtfs.zip"
-        today_date = time.strftime('%Y-%m-%d', time.localtime())
-        path_where_download = "../../data/external/transilien-gtfs-" + today_date + ".zip"
-
         urlretrieve(path_gtfs, path_where_download)
 
     @task()
-    def process_gtfs():
+    def process_gtfs(original_file, pf, today_date):
         """
         Fetch all data related to SNCF RER B stations and process it as a Dataframe.
         Sends the processed data to a Kafka Producer
+        original_file : location of the zipped gtfs
+        pf : location of the processed gtfs
         """
-
         def import_gtfs(gtfs_path, busiest_date=True):
             """
             Provient de la library gtfs_functions : Charge un fichier gtfs zippé
@@ -140,30 +130,28 @@ def fetch_data_rer_b():
             res = dicto["Station_Order"]
             return res
 
-        def upload__df_to_s3(df: pd.DataFrame):
-            bucket = 'rer'  # already created on S3
+        def save_csv(path_to_save, dataframe: pd.DataFrame):
+            """
+            Sauvegarde le fichier en csv, préparé à être envoyé sur s3
+            """
+            dataframe.to_csv(path_to_save, index=False, )
+
+        def upload_df_to_s3(df: pd.DataFrame):
+            bucket = 'rer-b'  # already created on S3
             csv_buffer = StringIO()
             df.to_csv(csv_buffer)
 
             s3_resource = boto3.resource('s3')
             s3_resource.Object(bucket, 'df.csv').put(Body=csv_buffer.getvalue())
 
-        def download_gtfs_from_s3(today_date):
-            path_gtfs = "https://eu.ftp.opendatasoft.com/sncf/gtfs/transilien-gtfs.zip"
-
-            path_where_download = "s3://sncf-rer-b/transilien-gtfs-" + today_date + ".zip"
-            urlretrieve(path_gtfs, path_where_download)
-
-
-        today_date = time.strftime('%Y-%m-%d', time.localtime())
-
-        gtfs_path = "../../data/external/transilien-gtfs-" + today_date + ".zip"  # GTFS Path file
-        rer_b_relation = "../../data/processed/relation_ordre_RER_B.csv"  # Relation d'ordre des gares du RER B
+        rer_b_relation = "data/reference/relation_ordre_RER_B.csv"  # Relation d'ordre des gares du RER B
         routes_line = "IDFM:C01743"  # RER B au format IDFM
 
-        routes, stops, stop_times, trips, shapes = import_gtfs(gtfs_path)
+        # Importation du fichier zippé et de la relation d'ordre
+        routes, stops, stop_times, trips, shapes = import_gtfs(original_file)
         relation = import_relation(rer_b_relation)
 
+        # Renomage des colonnes et ajout de time_travelled
         column_names = ["trip_id", "trip_line", "trip_headsign", "trip_short_name", "destination", "destination_id",
                         "origin", "origin_id", "time_departure", "arrival", "arrival_id", "time_arrival",
                         "time_travelled"]
@@ -183,7 +171,7 @@ def fetch_data_rer_b():
         # Time difference
 
         a = df["trip_id"].unique()
-        start_time = time.time()
+        # start_time = time.time()
 
         for journeys in a:
             test = df[df.trip_id == journeys].reset_index(drop=True)
@@ -206,7 +194,7 @@ def fetch_data_rer_b():
                 arrival_id = test.loc[i, 'parent_station']
                 time_arrival = test.loc[i, 'arrival_time']
                 time_travelled = time_arrival - time_departure
-
+                warnings.simplefilter(action='ignore', category=FutureWarning)
                 cleaned_df = cleaned_df.append({
                     "trip_id": trip_id,
                     "trip_line": trip_line,
@@ -223,14 +211,33 @@ def fetch_data_rer_b():
                     "time_travelled": time_travelled,
                     "direction": direction},
                     ignore_index=True)
+                warnings.simplefilter(action='default', category=FutureWarning)
 
-        print("--- %s seconds ---" % (time.time() - start_time))
+        save_csv(pf, cleaned_df)
+
+        # print("--- %s seconds ---" % (time.time() - start_time))
 #        upload_to_s3(cleaned_df)
 
-    process_gtfs()
+    today_date = pendulum.now("Europe/Paris").to_date_string()
+
+    path = Path('data/external/') # Chemin de téléchargement du gtfs
+    path_processed = Path("data/processed/gtfs/") # Chemin de sauvegarde du gtfs
+
+    file_origin = 'transilien-gtfs-' + today_date + ".zip"
+    file_csv = 'transilien-gtfs-' + today_date + ".csv"
+
+    path_file = Path(path / file_origin)
+    processed_file = Path(path_processed / file_csv)
+    if not path_file.is_dir():
+        path.mkdir(parents=True, exist_ok=True)
+    if not path_processed.is_dir():
+        path_processed.mkdir(parents=True, exist_ok=True)
+
+    grab_gtfs(path_where_download=path_file)
+    process_gtfs(path_file, processed_file, today_date)
 
 
-dag_projet_instances = fetch_data_rer_b()  # Instanciation du DAG
+dag_projet_instances = fetch_gtfs()  # Instanciation du DAG
 
 # Pour run:
 # airflow dags backfill --start-date 2019-01-02 --end-date 2019-01-03 --reset-dagruns daily_ml
