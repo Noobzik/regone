@@ -37,7 +37,7 @@ current_dir = pathlib.Path.cwd()
 print(current_dir)
 
 
-@dag(DAG_NAME, default_args=default_args, schedule_interval="*/1 5-23 * * *",
+@dag(DAG_NAME, default_args=default_args, schedule_interval="*/1 5-23,0,1 * * *",
      start_date=pendulum.today('Europe/Paris').add(days=-1), catchup=False)
 def fetch_data_rer_b():
     """
@@ -190,8 +190,11 @@ def fetch_data_rer_b():
 
         class Station:
             def __init__(self, xml_df: dict, date: pendulum.DateTime):
-                assert ("@gare" in xml_df and "train" in xml_df)
-                size = len(xml_df['train'])
+                assert("@gare" in xml_df)
+                try:
+                    size = len(xml_df['train'])
+                except KeyError:
+                    size = 0
                 d: list[RERB] = []
                 _pattern = r'[A-Z]{4}[0-9]{2}'
                 if size != 0:
