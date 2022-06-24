@@ -273,3 +273,6 @@ fabric.properties
 
 # idea folder, uncomment if you don't need it
 .idea
+/aws_lambda/grab_next_departures/package/
+/aws_lambda/grab_itineraire/package/
+/aws_lambda/grab_info_trafic/package/
