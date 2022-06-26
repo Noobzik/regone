@@ -12,5 +12,6 @@ ENV C_INCLUDE_PATH=/usr/include/gdal
 # RUN echo "airflow:airflow" | chpasswd && adduser airflow sudo
 USER airflow
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+RUN echo -e "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0" > .env
 RUN pip install --no-cache-dir boto3 pandas pendulum xmlschema kafka-python partridge geopandas
 RUN pip install --no-cache-dir apache-airflow-providers-apache-spark==2.1.3
