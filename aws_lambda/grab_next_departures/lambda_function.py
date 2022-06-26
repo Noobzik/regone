@@ -4,8 +4,8 @@ import json
 
 def lambda_handler(event, context):
     """
-    ARN to deploy AWSDataWrangler-Python38
-    Grab next departures
+    Cette fonction récupère auprès du broker Kafka, la liste des prochains départs de la gare demandé
+    Le restultat est restitué dans un objet JSON auprès de celui qui a appelé cette fonction lambda
     """
     gare = event['queryStringParameters']["gare"]
     transaction_response = grab_next_departure(gare)
@@ -19,6 +19,9 @@ def lambda_handler(event, context):
 
 
 def get_end_offsets(consumer, topic) -> dict:
+    """
+    Cette méthode récuèpre le dernier record reçu dans le topic demandé
+    """
     partitions_for_topic = consumer.partitions_for_topic(topic)
     if partitions_for_topic:
         partitions = []
@@ -31,6 +34,10 @@ def get_end_offsets(consumer, topic) -> dict:
 
 
 def grab_topic_gare(gare: str = "87271460", num : int = 1):
+    """
+    Cette méthode récupère à partir d'une gare, le nombre n de records d'un topic Kafka
+    @todo : Affecter l'addresse IP Local du Kafka
+    """
     last_n_msg = num
     kafka_server = "172.31.40.44:19092"
     # consumer
@@ -48,4 +55,8 @@ def grab_topic_gare(gare: str = "87271460", num : int = 1):
 
 
 def grab_next_departure(gare: str):
+    """
+    Cette méthode retourne le résultat du record kafka.
+    Le résultat json se trouve à la position 6 du tableau
+    """
     return json.loads(grab_topic_gare(gare)[6])

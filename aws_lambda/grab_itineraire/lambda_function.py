@@ -4,8 +4,9 @@ import json
 
 def lambda_handler(event, context):
     """
-    ARN to deploy AWSDataWrangler-Python38
-    Grab Itineraire
+    Cette fonction récupère auprès d'Ile-de-France mobilités, une liste d'itinéraire de substitution à partir d'une gare
+    de départ et d'une gare d'arrivée.
+    Le restultat est restitué dans un objet JSON auprès de celui qui a appelé cette fonction lambda
     """
 
     # 1. Parse out query string params
@@ -28,6 +29,7 @@ def lambda_handler(event, context):
 def get_token():
     """
     Pour IDFM PRIM : Récupère un token pour traiter les données des endpoints de l'API
+    @todo : compléter les champs requis
     """
     urlOAuth = 'https://as.api.iledefrance-mobilites.fr/api/oauth/token'
     client_id = ""
