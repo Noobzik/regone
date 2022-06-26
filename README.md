@@ -17,10 +17,20 @@ Actuellement :
 
 A venir :
 * Script Terraform pour déployer les instances nécessaires
-* Job Spark pour constituer un Dataset d'entrainement pour détecter les écarts de parcours (alerte trafic potentiellement perturbé) à partir des données temps réels récoltés
+* Topic Kafka pour avoir l'heure d'arrivé en gare
+* Job Spark pour constituer un Dataset d'entrainement pour détecter les écarts de parcours (alerte trafic potentiellement perturbé) à partir des données temps réels récoltés dans le topic Kafka
 * Modèle d'IA (moving average last 5 trains, from A to B)
 * Inférence
-* Déclencheur de notification en provenance de Sagemaker pour AWS SNS afin d'envoyer une alerte sur le trafic perturbé. 
+* Déclencheur de notification en provenance de Sagemaker pour AWS SNS afin d'envoyer une alerte sur le trafic perturbé.
+
+Les endpoints actuellement déployés :
+* Prochains trains (Sans Paramètres)
+* Itinéraires de substitution (Gare départ, Gare d'arrivé)
+* Temps de parcours théorique (gare départ, gare d'arrivé, direction) 
+* Information trafic (Sans Paramètres)
+
+Les endpoints à venir:
+* Temps de parcours réel (moyenne 5 derniers trains)
 
 Project Organization
 ------------
@@ -49,7 +59,6 @@ Project Organization
     │   ├── processed      <- The final, canonical data sets for modeling.
     │   └── raw            <- The original, immutable data dump.
     │
-    ├── docs               <- A default Sphinx project; see sphinx-doc.org for details
     │
     ├── models             <- Trained and serialized models, model predictions, or model summaries
     │
@@ -67,23 +76,22 @@ Project Organization
     │                         generated with `pip freeze > requirements.txt`
     │
     ├── src                <- Source code for use in this project.
-    │   ├── __init__.py    <- Makes src a Python module
-    │   │
-    │   ├── data           <- Scripts to download or generate data
-    │   │   └── make_dataset.py
-    │   │
-    │   ├── features       <- Scripts to turn raw data into features for modeling
-    │   │   └── build_features.py
-    │   │
-    │   ├── models         <- Scripts to train models and then use trained models to make
-    │   │   │                 predictions
-    │   │   ├── predict_model.py
-    │   │   └── train_model.py
-    │   │
-    │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
-    │       └── visualize.py
-    │
-    └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
+        ├── __init__.py    <- Makes src a Python module
+        │
+        ├── data           <- Scripts to download or generate data
+        │   └── make_dataset.py
+        │
+        ├── features       <- Scripts to turn raw data into features for modeling
+        │   └── build_features.py
+        │
+        ├── models         <- Scripts to train models and then use trained models to make
+        │   │                 predictions
+        │   ├── predict_model.py
+        │   └── train_model.py
+        │
+        └── visualization  <- Scripts to create exploratory and results oriented visualizations
+            └── visualize.py
+     
 
 
 --------
