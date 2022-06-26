@@ -15,12 +15,19 @@ services:
     ports:
       - '9092:9092'
       - '9093:9093'
+      - '19092:19092' # Pour les connections interne AWS
     user: root
     environment:
       - KAFKA_BROKER_ID=1
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      # Configuration pour un cluster local
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
       - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      # Configuration pour un cluster sur AWS
+      # - KAFKA_CFG_LISTENERS=INTERNAL://0.0.0.0:19092,EXTERNAL://0.0.0.0:9092
+      # - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      #  # C'est ici qu'il faut mettre les addresses IP local pour INTERNAL, IP public pour EXTERNAL
+      # - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://172.31.40.44:19092,EXTERNAL://13.37.146.224:9092
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
 
