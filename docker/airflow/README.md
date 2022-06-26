@@ -4,8 +4,8 @@ Ce docker est à déployer sur une instance EC2 au minimum t2.medium
 
 ## Configuration du docker-composer
 
-1. Ouvrir l'interface airflow `aws_adress_ip:8080`
-   * Les identifiants pour se connecter sont `airflow` `airflow`
+1. Ouvrir l'interface web de airflow `aws_adress_ip:8080`
+   * Les identifiants pour se connecter sont : `airflow` / `airflow`
 2. Aller dans `Admin` &rarr; `Variable`
 3. Créer les paramètres suivants
 
@@ -38,3 +38,5 @@ Un template json suivant permet d'éviter de rentrer à la main les paramètres 
 | process_parcours_réel      | Dag qui récupère les deux derniers records d'un topic Kafka, et réstitue l'heure d'arrivé du train qui n'est pas dans le dernier record | 2 minutes |
 | process_parcours_theorique | Dag qui calcul le temps de parcours théorique du plan de transport de la journée                                                        | 24 heures |
 
+5. Lancez le cluster Kafka
+6. Une fois que le cluster est lancé, vérifier qu'il y a pas d'erreur sur l'execution des dags 
