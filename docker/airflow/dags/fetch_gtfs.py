@@ -1,3 +1,4 @@
+import logging
 import os
 import warnings
 
@@ -11,9 +12,15 @@ from airflow.decorators import dag, task
 from airflow.models import Variable
 from io import StringIO
 
+from botocore.exceptions import ClientError
 
 DAG_NAME = os.path.basename(__file__).replace(".py", "")  # Le nom du DAG est le nom du fichier
 TRANSILIEN_TOKEN = Variable.get("TRANSILIEN_KEY")
+AWS_REGION = Variable.get("AWS_REGION")
+AWS_ACCESS_ID = Variable.get("AWS_ACCESS_ID")
+AWS_SECRET_ACCESS_KEY = Variable.get("AWS_SECRET_ACCESS_KEY")
+BUCKET = "sncf-rer-b"
+BROKER = Variable.get("BROKER")
 
 default_args = {
     'owner': 'noobzik',
@@ -125,7 +132,7 @@ def fetch_gtfs():
             forme d'un dictionnaire non ordonné.
             """
             relation = pd.read_csv(path, sep=';',
-                                   names=["Station_name", "Station_Order"])
+                                   names=["Station_name", "Station_Order", "Gare_Api"])
             dicto = relation.set_index('Station_name').T.to_dict('index')
             res = dicto["Station_Order"]
             return res
@@ -134,15 +141,20 @@ def fetch_gtfs():
             """
             Sauvegarde le fichier en csv, préparé à être envoyé sur s3
             """
-            dataframe.to_csv(path_to_save, index=False, )
+            dataframe.to_csv(path_to_save, index=False)
 
-        def upload_df_to_s3(df: pd.DataFrame):
-            bucket = 'rer-b'  # already created on S3
-            csv_buffer = StringIO()
-            df.to_csv(csv_buffer)
+        def upload_df_to_s3(path_local, date):
 
-            s3_resource = boto3.resource('s3')
-            s3_resource.Object(bucket, 'df.csv').put(Body=csv_buffer.getvalue())
+            session = boto3.Session(aws_access_key_id=AWS_ACCESS_ID,
+                                    aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+            s3 = session.client('s3')
+            try:
+                s3.upload_file(str(path_local), BUCKET, "data/ref/" + "transilien-gtfs-" + date + ".csv")
+            except ClientError as e:
+                print(logging.error(e))
+                exit(-1)
+
+
 
         rer_b_relation = "data/reference/relation_ordre_RER_B.csv"  # Relation d'ordre des gares du RER B
         routes_line = "IDFM:C01743"  # RER B au format IDFM
@@ -214,6 +226,7 @@ def fetch_gtfs():
                 warnings.simplefilter(action='default', category=FutureWarning)
 
         save_csv(pf, cleaned_df)
+        upload_df_to_s3(pf, today_date)
 
         # print("--- %s seconds ---" % (time.time() - start_time))
 #        upload_to_s3(cleaned_df)
@@ -235,6 +248,7 @@ def fetch_gtfs():
 
     grab_gtfs(path_where_download=path_file)
     process_gtfs(path_file, processed_file, today_date)
+
 
 
 dag_projet_instances = fetch_gtfs()  # Instanciation du DAG
