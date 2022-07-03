@@ -14,11 +14,15 @@ Actuellement :
 * Restitution de l'information à travers des fonctions AWS Lambda.
 * Mise à disposition du schéma API de AWS API Gateway.
 * Image docker pour déployer airflow et kafka vers les instances EC2.
+* Job Spark pour constituer un Dataset d'entrainement pour détecter les écarts de parcours (alerte trafic potentiellement perturbé) à partir des données temps réels récoltés dans le topic Kafka
+* Topic Kafka pour avoir l'heure d'arrivé en gare
 
 A venir :
+* AWS Lambda pour requeter les temps réelles (Les composants sont développés, mais les tuyaux ne marchent pas)
 * Script Terraform pour déployer les instances nécessaires
-* Topic Kafka pour avoir l'heure d'arrivé en gare
-* Job Spark pour constituer un Dataset d'entrainement pour détecter les écarts de parcours (alerte trafic potentiellement perturbé) à partir des données temps réels récoltés dans le topic Kafka
+
+
+Non disponible au jour de la soutenance :
 * Modèle d'IA (moving average last 5 trains, from A to B)
 * Inférence
 * Déclencheur de notification en provenance de Sagemaker pour AWS SNS afin d'envoyer une alerte sur le trafic perturbé.
@@ -30,7 +34,7 @@ Les endpoints actuellement déployés :
 * Information trafic (Sans Paramètres)
 
 Les endpoints à venir:
-* Temps de parcours réel (moyenne 5 derniers trains)
+* Temps de parcours réel (moyenne 5 derniers trains) (problème pour raccorder les tuyaux)
 
 Project Organization
 ------------
