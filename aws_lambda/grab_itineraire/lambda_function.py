@@ -1,26 +1,27 @@
 import requests
 import json
+import pendulum
 
 
 def lambda_handler(event, context):
     """
-    Cette fonction récupère auprès d'Ile-de-France mobilités, une liste d'itinéraire de substitution à partir d'une gare
+    Cette fonction récupère auprès de la SNCF, une liste d'itinéraire de substitution à partir d'une gare
     de départ et d'une gare d'arrivée.
     Le restultat est restitué dans un objet JSON auprès de celui qui a appelé cette fonction lambda
     """
 
     # 1. Parse out query string params
-    gareDepart = event['queryStringParameters']['gareDepart']
-    gareArrive = event['queryStringParameters']['gareArrive']
+    gareA = 'stop_area:SNCF:' + event['queryStringParameters']['gareDepart']
+    gareB = 'stop_area:SNCF:' + event['queryStringParameters']['gareArrive']
 
     # 1. Construct the body of the response object
-    transactionResponse = grab_response(gareDepart, gareArrive)
+    transactionResponse = grab_response(gareA, gareB)
     # 2. Construct http response object
     responseObject = {}
     responseObject['statusCode'] = 200
     responseObject['headers'] = {}
     responseObject['headers']['Content-Type'] = 'application/json'
-    responseObject['headers']['Access-Control- Allow-Origin'] = '*'
+    responseObject['headers']['Access-Control-Allow-Origin'] = '*'
     responseObject['body'] = json.dumps(transactionResponse)
     # 4. Return the response object return responseObject
     return responseObject
@@ -29,7 +30,6 @@ def lambda_handler(event, context):
 def get_token():
     """
     Pour IDFM PRIM : Récupère un token pour traiter les données des endpoints de l'API
-    @todo : compléter les champs requis
     """
     urlOAuth = 'https://as.api.iledefrance-mobilites.fr/api/oauth/token'
     client_id = ""
@@ -72,4 +72,30 @@ def grab_response(gare_a: str, gare_b: str):
         print('Status:', response.status_code, 'Erreur de la requête : fin de programme')
 
     json_data = response.json()
-    return json_data
+    js = json_data
+
+    di = {}
+    for j in range(len(js["journeys"])):
+        li = {}
+        for i in range(len(js["journeys"][j]["sections"])):
+            if "display_informations" in js["journeys"][j]["sections"][i]:
+                type = js["journeys"][j]["sections"][i]["display_informations"]["physical_mode"] + \
+                       " " + js["journeys"][j]["sections"][i]["display_informations"]["name"] + \
+                       " direction : " + js["journeys"][j]["sections"][i]["display_informations"][
+                           "direction"] + " " + pendulum.duration(
+                    seconds=js["journeys"][j]["sections"][i]["duration"]).in_words(
+                    locale="fr") + " départ à : " + pendulum.parse(
+                    js["journeys"][j]["sections"][i]["departure_date_time"]).to_time_string()
+
+            else:
+                type = js["journeys"][j]["sections"][i]["type"] + " "
+
+            if js["journeys"][j]["sections"][i]["type"] == "waiting":
+                li[i] = "Patientez : " + pendulum.duration(
+                    seconds=js["journeys"][j]["sections"][i]["duration"]).in_words(locale="fr")
+            else:
+                li[i] = (js["journeys"][j]["sections"][i]["from"]["name"] + " -> " +
+                         js["journeys"][j]["sections"][i]["to"]["name"] + " via : " + type)
+        di[j] = li
+
+    return di
