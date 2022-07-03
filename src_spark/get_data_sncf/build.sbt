@@ -17,9 +17,13 @@ libraryDependencies += "org.apache.spark" %% "spark-sql" % "3.2.1" % "compile"
 
 libraryDependencies += "org.apache.kafka" % "kafka-clients" % "3.1.0"
 
+libraryDependencies += "org.apache.kafka" % "kafka-streams" % "3.1.0"
+
 // https://mvnrepository.com/artifact/com.databricks/spark-xml
 libraryDependencies += "com.databricks" %% "spark-xml" % "0.15.0" % "compile"
 
 // https://mvnrepository.com/artifact/org.apache.spark/spark-sql-kafka-0-10
 libraryDependencies += "org.apache.spark" %% "spark-sql-kafka-0-10" % "3.2.1" % "compile"
+
+libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "2.30.0"
 

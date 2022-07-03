@@ -20,7 +20,7 @@ object Clean {
     val gare : String = "87271445"
     val url : String = baseUrl + gare + "/depart"
     val headers = Map(
-      "Authorization" -> "Basic "
+      "Authorization" -> "Basic dG5odG4xMjY0Olc1UXpiM2Q4"
     )
 
 
