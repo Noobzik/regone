@@ -276,3 +276,5 @@ fabric.properties
 /aws_lambda/grab_next_departures/package/
 /aws_lambda/grab_itineraire/package/
 /aws_lambda/grab_info_trafic/package/
+/aws_lambda/grab_info_trafic/packages/
+/aws_lambda/grab_itineraire/packages/
