@@ -7,13 +7,16 @@ def lambda_handler(event, context):
     Cette fonction récupère auprès du broker Kafka, la liste des prochains départs de la gare demandé
     Le restultat est restitué dans un objet JSON auprès de celui qui a appelé cette fonction lambda
     """
-    gare = event['queryStringParameters']["gare"]
+    gare = event['queryStringParameters']['gare']
     transaction_response = grab_next_departure(gare)
     response_object = {}
-    response_object['statusCode'] = 200
     response_object['headers'] = {}
     response_object['headers']['Content-Type'] = 'application/json'
-    response_object['headers']['Access-Control- Allow-Origin'] = '*'
+    response_object['headers']['Access-Control-Allow-Origin'] = '*'
+    if 'error' in transaction_response:
+        response_object['statusCode'] = 400
+    else:
+        response_object['statusCode'] = 200
     response_object['body'] = json.dumps(transaction_response)
     return response_object
 
@@ -33,18 +36,18 @@ def get_end_offsets(consumer, topic) -> dict:
         return end_offsets
 
 
-def grab_topic_gare(gare: str = "87271460", num : int = 1):
+def grab_topic_gare(gare: str = "87271460", num: int = 1):
     """
     Cette méthode récupère à partir d'une gare, le nombre n de records d'un topic Kafka
     @todo : Affecter l'addresse IP Local du Kafka
     """
     last_n_msg = num
-    kafka_server = "172.31.40.44:19092"
+    kafka_server = ""
     # consumer
     consumer = KafkaConsumer(
         bootstrap_servers=kafka_server,
         consumer_timeout_ms=10000)
-    end_offsets = get_end_offsets(consumer, gare)
+    end_offsets = get_end_offsets(consumer, "rer-b-" + gare)
     consumer.assign([*end_offsets])
     for key_partition, value_end_offset in end_offsets.items():
         new_calculated_offset = value_end_offset - last_n_msg
@@ -55,8 +58,4 @@ def grab_topic_gare(gare: str = "87271460", num : int = 1):
 
 
 def grab_next_departure(gare: str):
-    """
-    Cette méthode retourne le résultat du record kafka.
-    Le résultat json se trouve à la position 6 du tableau
-    """
     return json.loads(grab_topic_gare(gare)[6])
