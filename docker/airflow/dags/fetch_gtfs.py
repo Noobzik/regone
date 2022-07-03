@@ -1,18 +1,8 @@
-import logging
 import os
-import warnings
-
-import boto3
 import pendulum
-import zipfile
-import pandas as pd
-from pathlib import Path
-from urllib.request import urlretrieve
 from airflow.decorators import dag, task
 from airflow.models import Variable
-from io import StringIO
 
-from botocore.exceptions import ClientError
 
 DAG_NAME = os.path.basename(__file__).replace(".py", "")  # Le nom du DAG est le nom du fichier
 TRANSILIEN_TOKEN = Variable.get("TRANSILIEN_KEY")
@@ -26,6 +16,7 @@ default_args = {
     'owner': 'noobzik',
     'retries': 0,
     'retry_delay': pendulum.duration(minutes=30)
+
 }
 
 
@@ -35,6 +26,16 @@ def fetch_gtfs():
     """
     Ce DAG est permet de récupérer les prochains départs de l'ensemble de la partie SNCF du RER B
     """
+    import warnings
+    import boto3
+    import zipfile
+    import pandas as pd
+    import logging
+    from pathlib import Path
+    from urllib.request import urlretrieve
+    from botocore.exceptions import ClientError
+
+    from io import StringIO
 
     # Charge les données depuis S3
     def grab_gtfs(path_where_download):
@@ -53,6 +54,7 @@ def fetch_gtfs():
         Sends the processed data to a Kafka Producer
         original_file : location of the zipped gtfs
         pf : location of the processed gtfs
+        today_date : Date of today
         """
         def import_gtfs(gtfs_path, busiest_date=True):
             """
@@ -144,6 +146,11 @@ def fetch_gtfs():
             dataframe.to_csv(path_to_save, index=False)
 
         def upload_df_to_s3(path_local, date):
+            """
+            Prends en paramètre un chemin vers le fichier csv pour le stocker vers un S3
+            path_local : str
+            date : date
+            """
 
             session = boto3.Session(aws_access_key_id=AWS_ACCESS_ID,
                                     aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
@@ -182,6 +189,8 @@ def fetch_gtfs():
 
         # Time difference
 
+        # Filtre les doublons et stock dans un dataset A, c'est la liste des missions de la journée effectué
+        # par un train physiquement.
         a = df["trip_id"].unique()
         # start_time = time.time()
 
@@ -241,9 +250,10 @@ def fetch_gtfs():
 
     path_file = Path(path / file_origin)
     processed_file = Path(path_processed / file_csv)
-    if not path_file.is_dir():
+
+    if not path_file.is_dir(): # Fichier téléchargé dont le dossier existe
         path.mkdir(parents=True, exist_ok=True)
-    if not path_processed.is_dir():
+    if not path_processed.is_dir(): # Fichier du resultat dont le dossier existe
         path_processed.mkdir(parents=True, exist_ok=True)
 
     grab_gtfs(path_where_download=path_file)

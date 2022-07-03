@@ -1,21 +1,12 @@
-import json
+import pendulum
 import os
 import pathlib
-import boto3
-import pandas as pd
-import pendulum
-import requests
-import xmlschema
-import re
-import logging
-
 from pathlib import Path
 from airflow import AirflowException
-from botocore.exceptions import ClientError
+
 from airflow.decorators import dag, task
 from airflow.models import Variable
-from kafka import KafkaProducer
-from requests.exceptions import HTTPError
+
 
 DAG_NAME = os.path.basename(__file__).replace(".py", "")  # Le nom du DAG est le nom du fichier
 TRANSILIEN_TOKEN = Variable.get("TRANSILIEN_KEY")
@@ -40,6 +31,16 @@ print(current_dir)
 @dag(DAG_NAME, default_args=default_args, schedule_interval="*/1 5-23,0,1 * * *",
      start_date=pendulum.today('Europe/Paris').add(days=-1), catchup=False)
 def fetch_data_rer_b():
+    import requests
+    import xmlschema
+    import re
+    import logging
+    import json
+    import boto3
+    import pandas as pd
+    from botocore.exceptions import ClientError
+    from kafka import KafkaProducer
+    from requests.exceptions import HTTPError
     """
     Ce DAG est permet de récupérer les prochains départs de l'ensemble de la partie SNCF du RER B, tout les jours de la
     semaine, de 5h à 23h le jour suivant.

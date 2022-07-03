@@ -2,6 +2,13 @@
 
 Ce docker est à déployer sur une instance EC2 au minimum t2.medium
 
+Deploiement du docker : 
+
+```bash
+docker build -t spark-kafka-gdal:0.0.7 .
+docker-compose up
+```
+
 ## Configuration du docker-composer
 
 1. Ouvrir l'interface web de airflow `aws_adress_ip:8080`
